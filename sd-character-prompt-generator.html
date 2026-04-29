@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ SD 캐릭터 프롬프트 생성기 — AI 선도 교원 연수</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink:   #FFAFC5;
+    --lavender: #C9B8FF;
+    --mint:   #A8F0DC;
+    --peach:  #FFD6B0;
+    --sky:    #B0E0FF;
+    --cream:  #FFF8F0;
+    --white:  #FFFFFF;
+    --dark:   #2D2640;
+    --mid:    #5A5375;
+    --light:  #9B93B8;
+    --card-bg: rgba(255,255,255,0.82);
+    --border: rgba(180,160,220,0.3);
+    --shadow: 0 8px 32px rgba(120,90,180,0.13);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nanum Gothic', sans-serif;
+    background: linear-gradient(135deg, #f8e8ff 0%, #e8f4ff 40%, #e8fff8 80%, #fff8e8 100%);
+    min-height: 100vh;
+    color: var(--dark);
+    overflow-x: hidden;
+  }
+
+  /* Decorative background blobs */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -120px; right: -120px;
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(201,184,255,0.35) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -100px; left: -100px;
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, rgba(168,240,220,0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrapper {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+    position: relative; z-index: 1;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header .badge {
+    display: inline-block;
+    background: linear-gradient(90deg, var(--lavender), var(--pink));
+    color: var(--dark);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 5px 16px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  header h1 {
+    font-family: 'Gowun Dodum', serif;
+    font-size: clamp(22px, 5vw, 34px);
+    font-weight: 400;
+    color: var(--dark);
+    line-height: 1.4;
+  }
+  header h1 span {
+    background: linear-gradient(90deg, #a070e0, #ff7eb6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p {
+    margin-top: 10px;
+    color: var(--mid);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ─── STEPS BAR ─── */
+  .steps-bar {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .step-dot {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--light);
+    font-weight: 700;
+    transition: color .3s;
+  }
+  .step-dot .dot {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(180,160,220,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    transition: background .3s, color .3s;
+    color: var(--light);
+  }
+  .step-dot.active .dot { background: var(--lavender); color: var(--dark); }
+  .step-dot.active { color: var(--dark); }
+  .step-dot.done .dot { background: var(--mint); color: var(--dark); }
+  .step-dot .dash { width: 18px; height: 2px; background: rgba(180,160,220,0.25); border-radius: 2px; }
+  .step-dot:last-child .dash { display: none; }
+
+  /* ─── CARD BASE ─── */
+  .card {
+    background: var(--card-bg);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 800;
+    color: var(--mid);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--lavender), var(--pink));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* ─── WELCOME SCREEN ─── */
+  #welcome-screen {
+    text-align: center;
+    padding: 48px 24px;
+  }
+  .welcome-illustration {
+    font-size: 72px;
+    line-height: 1;
+    margin-bottom: 24px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  #welcome-screen h2 {
+    font-family: 'Gowun Dodum', serif;
+    font-size: 24px; color: var(--dark);
+    margin-bottom: 12px;
+  }
+  #welcome-screen p {
+    color: var(--mid); font-size: 14px; line-height: 1.8;
+    max-width: 420px; margin: 0 auto 32px;
+  }
+  .steps-list {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 32px;
+  }
+  .step-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 12px; color: var(--mid);
+    text-align: center; min-width: 100px;
+  }
+  .step-item .s-num {
+    display: block; font-size: 18px; margin-bottom: 4px;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 28px;
+    border-radius: 50px;
+    border: none; cursor: pointer;
+    font-family: 'Nanum Gothic', sans-serif;
+    font-size: 15px; font-weight: 800;
+    transition: all .25s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--lavender) 0%, var(--pink) 100%);
+    color: var(--dark);
+    box-shadow: 0 4px 20px rgba(180,130,230,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(180,130,230,0.45); }
+  .btn-secondary {
+    background: white;
+    color: var(--mid);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: #f7f0ff; }
+  .btn-mint {
+    background: linear-gradient(135deg, var(--mint) 0%, var(--sky) 100%);
+    color: var(--dark);
+    box-shadow: 0 4px 20px rgba(100,200,180,0.25);
+  }
+  .btn-mint:hover { transform: translateY(-2px); }
+  .btn-sm { padding: 8px 18px; font-size: 13px; }
+
+  /* ─── CAMERA SECTION ─── */
+  #camera-section { display: none; }
+  .camera-wrap {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #1a1a2e;
+    aspect-ratio: 4/3;
+    max-height: 340px;
+  }
+  #videoEl {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1);
+  }
+  #overlayCanvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    transform: scaleX(-1);
+    pointer-events: none;
+  }
+  .camera-status {
+    position: absolute; bottom: 12px; left: 12px;
+    background: rgba(0,0,0,0.6);
+    color: white; font-size: 11px;
+    padding: 4px 12px; border-radius: 20px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ccc;
+  }
+  .status-dot.active { background: #4eff91; animation: pulse-dot 1.5s infinite; }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+  .camera-hint {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(201,184,255,0.9);
+    color: var(--dark); font-size: 11px;
+    padding: 5px 12px; border-radius: 20px;
+  }
+
+  /* ─── RECOGNITION DATA ─── */
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .data-item {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    position: relative;
+  }
+  .data-item label {
+    font-size: 11px; color: var(--light);
+    font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block; margin-bottom: 6px;
+  }
+  .data-value {
+    font-size: 15px; font-weight: 800; color: var(--dark);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .data-value .color-swatch {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1.5px var(--border);
+    display: inline-block;
+  }
+  .data-item .edit-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: none; border: none; cursor: pointer;
+    font-size: 14px; opacity: 0.4; transition: opacity .2s;
+  }
+  .data-item .edit-btn:hover { opacity: 1; }
+  select.data-select {
+    width: 100%; padding: 6px 8px;
+    border: 1.5px solid var(--lavender);
+    border-radius: 8px;
+    font-family: 'Nanum Gothic', sans-serif;
+    font-size: 13px; font-weight: 700;
+    background: #faf6ff;
+    color: var(--dark);
+    cursor: pointer;
+  }
+
+  /* ─── POPUP (hair question) ─── */
+  .popup-overlay {
+    position: fixed; inset: 0;
+    background: rgba(45,38,64,0.45);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn .25s;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .popup-box {
+    background: white;
+    border-radius: 24px;
+    padding: 36px 32px;
+    max-width: 380px; width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(120,80,200,0.25);
+    animation: slideUp .3s;
+  }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .popup-box .popup-icon { font-size: 48px; margin-bottom: 16px; }
+  .popup-box h3 { font-family: 'Gowun Dodum', serif; font-size: 20px; margin-bottom: 10px; }
+  .popup-box p { color: var(--mid); font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
+  .popup-btns { display: flex; gap: 12px; justify-content: center; }
+
+  /* ─── CHOICE BUTTONS (subject/personality) ─── */
+  .choice-group { margin-bottom: 16px; }
+  .choice-label {
+    font-size: 12px; font-weight: 800; color: var(--mid);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 10px; display: block;
+  }
+  .choice-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .chip {
+    padding: 7px 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-family: 'Nanum Gothic', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--mid);
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--lavender); background: #faf6ff; }
+  .chip.selected {
+    background: linear-gradient(135deg, var(--lavender), var(--pink));
+    color: var(--dark);
+    border-color: transparent;
+    box-shadow: 0 2px 12px rgba(180,130,230,0.3);
+  }
+
+  /* ─── PROMPT OUTPUT ─── */
+  .prompt-box {
+    background: #1e1b2e;
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .prompt-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--lavender);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .prompt-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    line-height: 1.9;
+    color: #e8e0ff;
+  }
+  .prompt-text .tag-fixed { color: #7ee8c4; }
+  .prompt-text .tag-body { color: #ffb3d1; }
+  .prompt-text .tag-choice { color: #ffd6a0; }
+  .copy-row {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .copy-toast {
+    font-size: 12px; color: #4eff91;
+    font-weight: 700;
+    opacity: 0; transition: opacity .3s;
+  }
+  .copy-toast.show { opacity: 1; }
+
+  /* ─── FOOTER QUOTE ─── */
+  .quote-tag {
+    position: fixed;
+    bottom: 18px; right: 20px;
+    font-size: 10px; color: var(--light);
+    opacity: 0.6;
+    font-style: italic;
+    z-index: 10;
+    pointer-events: none;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* ─── LOADING SPINNER ─── */
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(201,184,255,0.3);
+    border-top-color: var(--lavender);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── SCAN ANIMATION ─── */
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(168,240,220,0.8), transparent);
+    animation: scanMove 2s linear infinite;
+    pointer-events: none; z-index: 5;
+  }
+  @keyframes scanMove {
+    from { top: 0; opacity: 1; }
+    to { top: 100%; opacity: 0.3; }
+  }
+
+  /* ─── CAPTURE FLASH ─── */
+  .flash {
+    position: absolute; inset: 0;
+    background: white;
+    opacity: 0; pointer-events: none;
+    border-radius: 16px;
+  }
+  .flash.go { animation: flashAnim .4s; }
+  @keyframes flashAnim { 0% { opacity: 0; } 30% { opacity: 0.6; } 100% { opacity: 0; } }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 540px) {
+    .data-grid { grid-template-columns: 1fr 1fr; }
+    .camera-wrap { max-height: 260px; }
+  }
+
+  /* Section visibility */
+  .hidden { display: none !important; }
+  #camera-section { display: none; }
+  #camera-section.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="badge">🏫 AI 선도 교원 연수 · 실습 도구</div>
+    <h1>나를 <span>치비 캐릭터</span>로 ✨<br>SD 프롬프트 생성기</h1>
+    <p>웹캠으로 선생님의 얼굴 특징을 분석하여<br>전문가 수준의 AI 이미지 생성 프롬프트를 자동으로 만들어 드립니다.</p>
+  </header>
+
+  <!-- ── STEPS BAR ── -->
+  <div class="steps-bar" id="stepsBar">
+    <div class="step-dot active" data-step="1"><div class="dot">1</div><span>시작</span><div class="dash"></div></div>
+    <div class="step-dot" data-step="2"><div class="dot">2</div><span>인식</span><div class="dash"></div></div>
+    <div class="step-dot" data-step="3"><div class="dot">3</div><span>보정</span><div class="dash"></div></div>
+    <div class="step-dot" data-step="4"><div class="dot">4</div><span>선택</span><div class="dash"></div></div>
+    <div class="step-dot" data-step="5"><div class="dot">5</div><span>완성</span><div class="dash"></div></div>
+  </div>
+
+  <!-- ──────────────────────────────────────
+       STEP 1 : 웰컴
+  ────────────────────────────────────── -->
+  <div class="card" id="welcomeCard">
+    <div id="welcome-screen">
+      <div class="welcome-illustration">🧑‍🏫</div>
+      <h2>안녕하세요, 선생님! 👋</h2>
+      <p>이 도구는 웹캠으로 선생님의 얼굴 특징을 분석한 뒤,<br>
+      AI 이미지 생성에 사용할 수 있는<br>
+      <strong>SD(치비) 캐릭터 디자인 프롬프트</strong>를 만들어 드립니다.</p>
+      <div class="steps-list">
+        <div class="step-item"><span class="s-num">📷</span>웹캠 촬영</div>
+        <div class="step-item"><span class="s-num">🔍</span>얼굴 분석</div>
+        <div class="step-item"><span class="s-num">✏️</span>보정·선택</div>
+        <div class="step-item"><span class="s-num">📋</span>프롬프트 복사</div>
+      </div>
+      <button class="btn btn-primary" id="startCameraBtn">
+        📷 카메라 켜기
+      </button>
+      <p style="font-size:12px; color:var(--light); margin-top:14px;">카메라 권한 허용이 필요합니다. 촬영 데이터는 외부로 전송되지 않습니다.</p>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────
+       STEP 2 : 카메라 + 인식
+  ────────────────────────────────────── -->
+  <div id="camera-section">
+
+    <!-- Camera feed -->
+    <div class="card">
+      <div class="card-title"><div class="icon">📷</div>실시간 얼굴 인식</div>
+      <div class="camera-wrap" id="cameraWrap">
+        <video id="videoEl" autoplay muted playsinline></video>
+        <canvas id="overlayCanvas"></canvas>
+        <div class="scan-line" id="scanLine" style="display:none"></div>
+        <div class="flash" id="flashEl"></div>
+        <div class="camera-status">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">카메라 준비 중…</span>
+        </div>
+        <div class="camera-hint" id="cameraHint">얼굴을 화면 중앙에 맞춰주세요</div>
+      </div>
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="captureBtn" disabled>🔍 분석 시작</button>
+        <button class="btn btn-secondary btn-sm" id="retakeBtn" style="display:none">🔄 다시 찍기</button>
+      </div>
+      <p id="analysisMsg" style="font-size:12px; color:var(--mid); margin-top:10px;"></p>
+    </div>
+
+    <!-- ──────────────────────────────────────
+         STEP 3 : 인식 결과 + 수동 보정
+    ────────────────────────────────────── -->
+    <div class="card hidden" id="dataCard">
+      <div class="card-title"><div class="icon">🔍</div>인식 결과 <span style="font-size:11px;font-weight:400;color:var(--light);margin-left:6px;">— 틀렸으면 ✏️ 눌러서 수정하세요</span></div>
+      <div class="data-grid" id="dataGrid">
+        <!-- JS로 채워짐 -->
+      </div>
+    </div>
+
+    <!-- ──────────────────────────────────────
+         STEP 4 : 사용자 선택 버튼
+    ────────────────────────────────────── -->
+    <div class="card hidden" id="choiceCard">
+      <div class="card-title"><div class="icon">🎨</div>캐릭터 스타일 선택</div>
+
+      <div class="choice-group">
+        <span class="choice-label">📚 담당 과목</span>
+        <div class="choice-chips" id="subjectChips">
+          <div class="chip" data-group="subject" data-val="Korean language teacher">국어</div>
+          <div class="chip" data-group="subject" data-val="math teacher">수학</div>
+          <div class="chip" data-group="subject" data-val="science teacher">과학</div>
+          <div class="chip" data-group="subject" data-val="English teacher">영어</div>
+          <div class="chip" data-group="subject" data-val="history teacher">역사</div>
+          <div class="chip" data-group="subject" data-val="art teacher">미술</div>
+          <div class="chip" data-group="subject" data-val="music teacher">음악</div>
+          <div class="chip" data-group="subject" data-val="physical education teacher">체육</div>
+        </div>
+      </div>
+
+      <div class="choice-group">
+        <span class="choice-label">✨ 성격·분위기</span>
+        <div class="choice-chips" id="vibeChips">
+          <div class="chip" data-group="vibe" data-val="cheerful bright personality">밝고 활발한</div>
+          <div class="chip" data-group="vibe" data-val="strict professional">엄격한</div>
+          <div class="chip" data-group="vibe" data-val="gentle kind expression">온화한</div>
+          <div class="chip" data-group="vibe" data-val="cool intellectual">시크한</div>
+          <div class="chip" data-group="vibe" data-val="energetic passionate">열정적인</div>
+          <div class="chip" data-group="vibe" data-val="calm wise">차분한</div>
+        </div>
+      </div>
+
+      <div class="choice-group">
+        <span class="choice-label">👔 복장·소품</span>
+        <div class="choice-chips" id="accessoryChips">
+          <div class="chip" data-group="accessory" data-val="wearing formal suit jacket">정장</div>
+          <div class="chip" data-group="accessory" data-val="casual comfortable outfit">캐주얼</div>
+          <div class="chip" data-group="accessory" data-val="wearing glasses">안경</div>
+          <div class="chip" data-group="accessory" data-val="holding chalk and eraser">분필·지우개</div>
+          <div class="chip" data-group="accessory" data-val="holding a book">책</div>
+          <div class="chip" data-group="accessory" data-val="holding a pointer stick">교봉</div>
+        </div>
+      </div>
+
+      <div class="choice-group">
+        <span class="choice-label">🌈 배경·분위기</span>
+        <div class="choice-chips" id="bgChips">
+          <div class="chip" data-group="bg" data-val="classroom background">교실 배경</div>
+          <div class="chip" data-group="bg" data-val="blackboard background">칠판 배경</div>
+          <div class="chip" data-group="bg" data-val="white background">흰 배경</div>
+          <div class="chip" data-group="bg" data-val="pastel gradient background">파스텔 배경</div>
+          <div class="chip" data-group="bg" data-val="outdoor schoolyard background">운동장 배경</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ──────────────────────────────────────
+         STEP 5 : 프롬프트 출력
+    ────────────────────────────────────── -->
+    <div class="card hidden" id="promptCard">
+      <div class="card-title"><div class="icon">✨</div>생성된 프롬프트</div>
+      <div class="prompt-box">
+        <div class="prompt-label">✦ SD / Midjourney / DALL-E 프롬프트</div>
+        <div class="prompt-text" id="promptText">분석 후 자동으로 생성됩니다…</div>
+      </div>
+      <div class="copy-row">
+        <button class="btn btn-mint" id="copyBtn">📋 프롬프트 복사하기</button>
+        <span class="copy-toast" id="copyToast">✅ 복사 완료!</span>
+      </div>
+      <p style="font-size:11px; color:var(--light); margin-top:14px; line-height:1.7;">
+        💡 <strong>Midjourney</strong>, <strong>DALL-E 3</strong>, <strong>Stable Diffusion</strong>, <strong>Adobe Firefly</strong> 등 AI 이미지 생성 도구에 그대로 붙여넣기 하세요!
+      </p>
+    </div>
+
+  </div>
+  <!-- /camera-section -->
+
+</div>
+<!-- /wrapper -->
+
+<!-- ── HAIR QUESTION POPUP ── -->
+<div class="popup-overlay hidden" id="hairPopup">
+  <div class="popup-box">
+    <div class="popup-icon">💇‍♀️</div>
+    <h3>머리를 묶고 계신가요?</h3>
+    <p>카메라 분석에서 머리 길이가 짧은 것으로 감지되었습니다.<br>실제로 머리를 묶으신 건지 확인해 주세요!</p>
+    <div class="popup-btns">
+      <button class="btn btn-primary" id="hairYes">✅ 네, 묶었어요</button>
+      <button class="btn btn-secondary" id="hairNo">❌ 아니요</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOADING POPUP ── -->
+<div class="popup-overlay hidden" id="loadingPopup">
+  <div class="popup-box">
+    <div class="popup-icon">🔬</div>
+    <h3>얼굴 특징 분석 중…</h3>
+    <p>잠시만 기다려 주세요.<br>이목구비, 피부톤, 머리 스타일을 분석하고 있습니다.</p>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- ── FOOTER QUOTE ── -->
+<div class="quote-tag">나를 표현하는<br>기술적 정의</div>
+
+<!-- face-api.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+const state = {
+  currentStep: 1,
+  cameraReady: false,
+  faceDetected: false,
+  analysisData: {
+    gender: 'unknown',
+    faceShape: 'oval',
+    eyeSize: 'medium',
+    eyebrow: 'normal',
+    nose: 'medium',
+    mouth: 'medium',
+    skinTone: 'medium',
+    skinColor: '#C8956C',
+    hairLength: 'medium',
+    hairTiedUp: null,
+  },
+  choices: {
+    subject: null,
+    vibe: null,
+    accessory: [],
+    bg: null,
+  },
+  stream: null,
+  faceApiLoaded: false,
+  analysisInterval: null,
+};
+
+/* ══════════════════════════════════════════════
+   DOM REFS
+══════════════════════════════════════════════ */
+const videoEl = document.getElementById('videoEl');
+const overlayCanvas = document.getElementById('overlayCanvas');
+const ctx = overlayCanvas.getContext('2d');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const captureBtn = document.getElementById('captureBtn');
+const retakeBtn = document.getElementById('retakeBtn');
+const analysisMsg = document.getElementById('analysisMsg');
+const hairPopup = document.getElementById('hairPopup');
+const loadingPopup = document.getElementById('loadingPopup');
+const dataCard = document.getElementById('dataCard');
+const choiceCard = document.getElementById('choiceCard');
+const promptCard = document.getElementById('promptCard');
+const promptText = document.getElementById('promptText');
+const dataGrid = document.getElementById('dataGrid');
+const cameraHint = document.getElementById('cameraHint');
+const scanLine = document.getElementById('scanLine');
+const flashEl = document.getElementById('flashEl');
+const copyToast = document.getElementById('copyToast');
+
+/* ══════════════════════════════════════════════
+   STEP NAVIGATION
+══════════════════════════════════════════════ */
+function setStep(n) {
+  state.currentStep = n;
+  document.querySelectorAll('.step-dot').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.remove('active','done');
+    if (s < n) el.classList.add('done');
+    if (s === n) el.classList.add('active');
+  });
+}
+
+/* ══════════════════════════════════════════════
+   STEP 1 → START CAMERA
+══════════════════════════════════════════════ */
+document.getElementById('startCameraBtn').addEventListener('click', async () => {
+  document.getElementById('welcomeCard').classList.add('hidden');
+  document.getElementById('camera-section').classList.add('visible');
+  setStep(2);
+  await initCamera();
+});
+
+async function initCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+    });
+    state.stream = stream;
+    videoEl.srcObject = stream;
+    await new Promise((resolve) => {
+      videoEl.onloadedmetadata = () => { videoEl.play(); resolve(); };
+    });
+    overlayCanvas.width = videoEl.videoWidth || 640;
+    overlayCanvas.height = videoEl.videoHeight || 480;
+    statusDot.classList.add('active');
+    statusText.textContent = '카메라 연결됨 ✓';
+    state.cameraReady = true;
+    captureBtn.disabled = false;
+    captureBtn.textContent = '🔍 분석 시작';
+    scanLine.style.display = 'block';
+    analysisMsg.textContent = '📍 얼굴을 화면 중앙에 맞추고 [분석 시작]을 눌러주세요.';
+    // Try to load face-api models in background (non-blocking)
+    loadFaceApiModels();
+  } catch(e) {
+    statusText.textContent = '카메라 오류: ' + (e.message || e);
+    captureBtn.disabled = false;
+    captureBtn.textContent = '⌨️ 수동으로 입력하기';
+    captureBtn.addEventListener('click', () => {
+      loadingPopup.classList.remove('hidden');
+      setTimeout(() => {
+        doManualFallback();
+        loadingPopup.classList.add('hidden');
+      }, 1000);
+    }, { once: true });
+  }
+}
+
+/* ══════════════════════════════════════════════
+   FACE-API.JS LOADER  (CDN models)
+══════════════════════════════════════════════ */
+async function loadFaceApiModels() {
+  statusText.textContent = 'AI 모델 로딩 중…';
+  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+  try {
+    if (typeof faceapi === 'undefined') throw new Error('face-api not loaded');
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+    ]);
+    state.faceApiLoaded = true;
+    statusText.textContent = '얼굴 감지 준비 완료 ✓';
+    startLiveDetection();
+  } catch(err) {
+    statusText.textContent = '카메라 연결됨 ✓ (픽셀 분석 모드)';
+    state.faceApiLoaded = false;
+  }
+}
+
+/* Live landmark overlay */
+async function startLiveDetection() {
+  if (!state.faceApiLoaded) return;
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
+  
+  async function detectLoop() {
+    if (!state.cameraReady || videoEl.paused) return;
+    
+    overlayCanvas.width = videoEl.videoWidth || 640;
+    overlayCanvas.height = videoEl.videoHeight || 480;
+    
+    try {
+      const result = await faceapi
+        .detectSingleFace(videoEl, opts)
+        .withFaceLandmarks(true);
+      
+      ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      
+      if (result) {
+        state.faceDetected = true;
+        cameraHint.textContent = '얼굴 감지됨 ✓';
+        drawLandmarks(result);
+      } else {
+        state.faceDetected = false;
+        cameraHint.textContent = '얼굴을 화면 중앙에 맞춰주세요';
+      }
+    } catch(e) {}
+    
+    requestAnimationFrame(detectLoop);
+  }
+  detectLoop();
+}
+
+function drawLandmarks(result) {
+  const lm = result.landmarks.positions;
+  const box = result.detection.box;
+
+  // Draw face box
+  ctx.strokeStyle = 'rgba(201,184,255,0.7)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(box.x, box.y, box.width, box.height, 12);
+  ctx.stroke();
+
+  // Draw dots
+  const groups = [
+    { pts: lm.slice(0, 17), color: '#A8F0DC', close: false },   // jaw
+    { pts: lm.slice(17, 27), color: '#ffafc5', close: false },   // eyebrows
+    { pts: lm.slice(27, 36), color: '#b0e0ff', close: false },   // nose
+    { pts: lm.slice(36, 42), color: '#ffd6b0', close: true },    // left eye
+    { pts: lm.slice(42, 48), color: '#ffd6b0', close: true },    // right eye
+    { pts: lm.slice(48, 68), color: '#ffafc5', close: true },    // mouth
+  ];
+  groups.forEach(({ pts, color, close }) => {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    if (close) ctx.closePath();
+    ctx.stroke();
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.arc(p.x, p.y, 2, 0, Math.PI*2);
+      ctx.fill();
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════
+   CAPTURE & ANALYZE
+══════════════════════════════════════════════ */
+captureBtn.addEventListener('click', async () => {
+  if (!state.cameraReady) return;
+  flashEl.classList.add('go');
+  setTimeout(() => flashEl.classList.remove('go'), 400);
+  captureBtn.disabled = true;
+  loadingPopup.classList.remove('hidden');
+  setStep(3);
+
+  await delay(900);
+
+  try {
+    if (state.faceApiLoaded && typeof faceapi !== 'undefined') {
+      await analyzeFaceApi();
+    } else {
+      analyzePixelFallback();
+    }
+  } catch(e) {
+    analyzePixelFallback();
+  }
+
+  loadingPopup.classList.add('hidden');
+  showResults();
+});
+
+async function analyzeFaceApi() {
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.3 });
+  
+  try {
+    const result = await faceapi
+      .detectSingleFace(videoEl, opts)
+      .withFaceLandmarks(true);
+    
+    if (result) {
+      const lm = result.landmarks.positions;
+      const box = result.detection.box;
+      
+      // Skin tone from face ROI
+      state.analysisData.skinColor = getSkinToneFromBox(box);
+      state.analysisData.skinTone = classifySkinTone(state.analysisData.skinColor);
+      
+      // Eye size (landmark 36–41, 42–47)
+      const leftEye = lm.slice(36, 42);
+      const eyeHeight = Math.abs(leftEye[1].y - leftEye[5].y);
+      const eyeWidth = Math.abs(leftEye[0].x - leftEye[3].x);
+      const eyeRatio = eyeHeight / eyeWidth;
+      state.analysisData.eyeSize = eyeRatio > 0.38 ? 'large' : eyeRatio > 0.27 ? 'medium' : 'small';
+      
+      // Face shape from jaw
+      const jaw = lm.slice(0, 17);
+      const jawWidth = Math.abs(jaw[0].x - jaw[16].x);
+      const faceHeight = box.height;
+      const ratio = faceHeight / jawWidth;
+      state.analysisData.faceShape = ratio > 1.4 ? 'long' : ratio > 1.1 ? 'oval' : 'round';
+      
+      // Hair: compare bounding box top to face top
+      const topMargin = box.y;
+      const hairRatio = topMargin / box.height;
+      let hairLen;
+      if (hairRatio < 0.15) hairLen = 'short';
+      else if (hairRatio < 0.35) hairLen = 'medium';
+      else hairLen = 'long';
+      state.analysisData.hairLength = hairLen;
+
+      // Nose
+      const noseW = Math.abs(lm[31].x - lm[35].x);
+      const faceW = box.width;
+      state.analysisData.nose = noseW / faceW > 0.22 ? 'wide' : noseW / faceW > 0.15 ? 'medium' : 'narrow';
+
+      // Mouth
+      const mouthW = Math.abs(lm[48].x - lm[54].x);
+      state.analysisData.mouth = mouthW / faceW > 0.45 ? 'wide' : 'medium';
+
+      // Eyebrow
+      const lBrow = lm.slice(17, 22);
+      const browH = Math.abs(lBrow[0].y - leftEye[0].y);
+      state.analysisData.eyebrow = browH < faceHeight * 0.07 ? 'thin' : browH < faceHeight * 0.12 ? 'normal' : 'thick';
+      
+    } else {
+      // No face detected – use pixel fallback
+      analyzePixelFallback();
+    }
+  } catch(e) {
+    analyzePixelFallback();
+  }
+}
+
+function getSkinToneFromBox(box) {
+  // Sample pixels from center of face bounding box
+  const tempCanvas = document.createElement('canvas');
+  const scaleX = videoEl.videoWidth / videoEl.offsetWidth;
+  const scaleY = videoEl.videoHeight / videoEl.offsetHeight;
+  
+  const sampleX = (box.x + box.width * 0.3) | 0;
+  const sampleY = (box.y + box.height * 0.3) | 0;
+  const sampleW = (box.width * 0.4) | 0;
+  const sampleH = (box.height * 0.4) | 0;
+  
+  tempCanvas.width = sampleW || 60;
+  tempCanvas.height = sampleH || 60;
+  const tc = tempCanvas.getContext('2d');
+  
+  // Draw mirrored video
+  tc.save();
+  tc.scale(-1, 1);
+  tc.drawImage(videoEl,
+    videoEl.videoWidth - sampleX - sampleW, sampleY, sampleW, sampleH,
+    -sampleW, 0, sampleW, sampleH
+  );
+  tc.restore();
+  
+  try {
+    const imgData = tc.getImageData(0, 0, sampleW || 60, sampleH || 60).data;
+    let r = 0, g = 0, b = 0, count = 0;
+    for (let i = 0; i < imgData.length; i += 16) {
+      r += imgData[i]; g += imgData[i+1]; b += imgData[i+2];
+      count++;
+    }
+    if (count === 0) return '#C8956C';
+    r = (r/count) | 0; g = (g/count) | 0; b = (b/count) | 0;
+    return `rgb(${r},${g},${b})`;
+  } catch(e) {
+    return '#C8956C';
+  }
+}
+
+function classifySkinTone(colorStr) {
+  // Parse rgb
+  const m = colorStr.match(/\d+/g);
+  if (!m) return 'medium';
+  const [r, g, b] = m.map(Number);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  if (brightness > 175) return 'fair';
+  if (brightness > 130) return 'medium';
+  if (brightness > 95) return 'warm';
+  return 'deep';
+}
+
+function analyzePixelFallback() {
+  // Rough pixel-based analysis without face detection
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = videoEl.videoWidth || 320;
+  tempCanvas.height = videoEl.videoHeight || 240;
+  const tc = tempCanvas.getContext('2d');
+  tc.save(); tc.scale(-1, 1);
+  tc.drawImage(videoEl, -tempCanvas.width, 0, tempCanvas.width, tempCanvas.height);
+  tc.restore();
+
+  const w = tempCanvas.width, h = tempCanvas.height;
+  
+  // Center face area
+  try {
+    const faceData = tc.getImageData(w*0.3, h*0.2, w*0.4, h*0.5).data;
+    let r=0,g=0,b=0,count=0;
+    for (let i=0;i<faceData.length;i+=16) {
+      r+=faceData[i]; g+=faceData[i+1]; b+=faceData[i+2]; count++;
+    }
+    if (count > 0) {
+      r=(r/count)|0; g=(g/count)|0; b=(b/count)|0;
+      state.analysisData.skinColor = `rgb(${r},${g},${b})`;
+      state.analysisData.skinTone = classifySkinTone(state.analysisData.skinColor);
+    }
+
+    // Hair: top area brightness
+    const topData = tc.getImageData(w*0.2, 0, w*0.6, h*0.2).data;
+    let topBright = 0, topCount = 0;
+    for (let i=0;i<topData.length;i+=16) {
+      topBright += (topData[i]*299 + topData[i+1]*587 + topData[i+2]*114)/1000;
+      topCount++;
+    }
+    const avgTop = topCount > 0 ? topBright/topCount : 128;
+    state.analysisData.hairLength = avgTop < 60 ? 'short' : avgTop < 140 ? 'medium' : 'long';
+    
+    // Randomize other features slightly for demo
+    const eyes = ['small','medium','large'];
+    const shapes = ['round','oval','long'];
+    state.analysisData.eyeSize = eyes[1];
+    state.analysisData.faceShape = shapes[1];
+    state.analysisData.nose = 'medium';
+    state.analysisData.mouth = 'medium';
+    state.analysisData.eyebrow = 'normal';
+  } catch(e) {
+    state.analysisData.skinTone = 'medium';
+    state.analysisData.skinColor = '#C8956C';
+  }
+}
+
+/* ══════════════════════════════════════════════
+   SHOW RESULTS & HAIR POPUP
+══════════════════════════════════════════════ */
+function showResults() {
+  renderDataGrid();
+  dataCard.classList.remove('hidden');
+  choiceCard.classList.remove('hidden');
+  promptCard.classList.remove('hidden');
+  captureBtn.style.display = 'none';
+  retakeBtn.style.display = 'inline-flex';
+  setStep(4);
+  updatePrompt();
+
+  // Hair question popup for short/medium hair
+  if (state.analysisData.hairLength === 'short' || state.analysisData.hairLength === 'medium') {
+    setTimeout(() => {
+      hairPopup.classList.remove('hidden');
+    }, 500);
+  }
+
+  // Scroll to data
+  dataCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('hairYes').addEventListener('click', () => {
+  state.analysisData.hairTiedUp = true;
+  state.analysisData.hairLength = 'long';
+  hairPopup.classList.add('hidden');
+  renderDataGrid();
+  updatePrompt();
+  setStep(4);
+});
+document.getElementById('hairNo').addEventListener('click', () => {
+  state.analysisData.hairTiedUp = false;
+  hairPopup.classList.add('hidden');
+  updatePrompt();
+});
+
+/* ══════════════════════════════════════════════
+   DATA GRID RENDER
+══════════════════════════════════════════════ */
+const dataFields = [
+  { key: 'faceShape', label: '얼굴형', options: ['round','oval','long','square'], labels: { round:'둥근형', oval:'계란형', long:'긴형', square:'각진형' } },
+  { key: 'eyeSize', label: '눈 크기', options: ['small','medium','large'], labels: { small:'작은 눈', medium:'보통 눈', large:'큰 눈' } },
+  { key: 'eyebrow', label: '눈썹', options: ['thin','normal','thick'], labels: { thin:'얇은', normal:'보통', thick:'굵은' } },
+  { key: 'nose', label: '코', options: ['narrow','medium','wide'], labels: { narrow:'날카로운', medium:'보통', wide:'넓은' } },
+  { key: 'mouth', label: '입', options: ['medium','wide'], labels: { medium:'보통', wide:'넓은' } },
+  { key: 'skinTone', label: '피부톤', options: ['fair','medium','warm','deep'], labels: { fair:'밝은', medium:'보통', warm:'웜톤', deep:'어두운' }, hasSwatch: true },
+  { key: 'hairLength', label: '머리 길이', options: ['short','bob','medium','long'], labels: { short:'숏컷', bob:'단발', medium:'중간', long:'긴 머리' } },
+];
+
+function renderDataGrid() {
+  dataGrid.innerHTML = '';
+  dataFields.forEach(field => {
+    const val = state.analysisData[field.key];
+    const displayLabel = field.labels[val] || val;
+    const div = document.createElement('div');
+    div.className = 'data-item';
+    div.innerHTML = `
+      <label>${field.label}</label>
+      <div class="data-value" id="dv-${field.key}">
+        ${field.hasSwatch ? `<span class="color-swatch" style="background:${state.analysisData.skinColor}"></span>` : ''}
+        ${displayLabel}
+      </div>
+      <button class="edit-btn" data-key="${field.key}" title="수정">✏️</button>
+      <div id="sel-${field.key}" style="display:none; margin-top:8px;">
+        <select class="data-select" data-key="${field.key}">
+          ${field.options.map(o => `<option value="${o}" ${o===val?'selected':''}>${field.labels[o]}</option>`).join('')}
+        </select>
+      </div>
+    `;
+    dataGrid.appendChild(div);
+  });
+
+  // Edit buttons
+  dataGrid.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      const sel = document.getElementById(`sel-${key}`);
+      const dv = document.getElementById(`dv-${key}`);
+      const isVisible = sel.style.display !== 'none';
+      sel.style.display = isVisible ? 'none' : 'block';
+      dv.style.display = isVisible ? 'flex' : 'none';
+    });
+  });
+
+  // Select changes
+  dataGrid.querySelectorAll('.data-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const key = sel.dataset.key;
+      state.analysisData[key] = sel.value;
+      const field = dataFields.find(f => f.key === key);
+      const dv = document.getElementById(`dv-${key}`);
+      dv.innerHTML = (field.hasSwatch ? `<span class="color-swatch" style="background:${state.analysisData.skinColor}"></span>` : '')
+        + (field.labels[sel.value] || sel.value);
+      document.getElementById(`sel-${key}`).style.display = 'none';
+      dv.style.display = 'flex';
+      updatePrompt();
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════
+   CHOICE CHIPS
+══════════════════════════════════════════════ */
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const group = chip.dataset.group;
+    const val = chip.dataset.val;
+
+    if (group === 'accessory') {
+      // Multi-select
+      chip.classList.toggle('selected');
+      if (chip.classList.contains('selected')) {
+        state.choices.accessory.push(val);
+      } else {
+        state.choices.accessory = state.choices.accessory.filter(v => v !== val);
+      }
+    } else {
+      // Single select per group
+      document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      state.choices[group] = val;
+    }
+    setStep(5);
+    updatePrompt();
+  });
+});
+
+/* ══════════════════════════════════════════════
+   PROMPT ENGINE
+══════════════════════════════════════════════ */
+const SKIN_TONE_MAP = {
+  fair: 'fair skin tone', medium: 'medium skin tone',
+  warm: 'warm golden skin tone', deep: 'deep rich skin tone'
+};
+const EYE_MAP = { small: 'small eyes', medium: 'medium eyes', large: 'big expressive eyes' };
+const HAIR_MAP = { short: 'short hair', bob: 'bob cut', medium: 'shoulder-length hair', long: 'long hair' };
+const FACE_MAP = { round: 'round face', oval: 'oval face', long: 'long face', square: 'square jawline' };
+const EYEBROW_MAP = { thin: 'thin eyebrows', normal: 'natural eyebrows', thick: 'thick bold eyebrows' };
+const NOSE_MAP = { narrow: 'delicate nose', medium: 'button nose', wide: 'broad nose' };
+
+function updatePrompt() {
+  const ad = state.analysisData;
+  const ch = state.choices;
+
+  // Fixed base
+  const fixed = 'chibi style, 2D vector art, minimalist flat design, clean thick outlines, white background, cute proportions, big head small body';
+
+  // Body features
+  const bodyParts = [
+    FACE_MAP[ad.faceShape] || 'oval face',
+    EYE_MAP[ad.eyeSize] || 'medium eyes',
+    EYEBROW_MAP[ad.eyebrow] || 'natural eyebrows',
+    NOSE_MAP[ad.nose] || 'button nose',
+    SKIN_TONE_MAP[ad.skinTone] || 'medium skin tone',
+    (ad.hairTiedUp ? 'long hair tied up in a ponytail' : HAIR_MAP[ad.hairLength] || 'medium hair'),
+  ].filter(Boolean).join(', ');
+
+  // Choices
+  const choiceParts = [
+    ch.subject || '',
+    ch.vibe || '',
+    ...ch.accessory,
+    ch.bg || 'white background',
+  ].filter(Boolean).join(', ');
+
+  const fullPrompt = [fixed, bodyParts, choiceParts].filter(Boolean).join(', ');
+  state.currentPrompt = fullPrompt;
+
+  // Render with color coding
+  promptText.innerHTML =
+    `<span class="tag-fixed">${fixed}</span>, <span class="tag-body">${bodyParts}</span>` +
+    (choiceParts ? `, <span class="tag-choice">${choiceParts}</span>` : '');
+}
+
+/* ══════════════════════════════════════════════
+   COPY BUTTON
+══════════════════════════════════════════════ */
+document.getElementById('copyBtn').addEventListener('click', () => {
+  if (!state.currentPrompt) return;
+  navigator.clipboard.writeText(state.currentPrompt).then(() => {
+    copyToast.classList.add('show');
+    setTimeout(() => copyToast.classList.remove('show'), 2500);
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = state.currentPrompt;
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    copyToast.classList.add('show');
+    setTimeout(() => copyToast.classList.remove('show'), 2500);
+  });
+  setStep(5);
+});
+
+/* ══════════════════════════════════════════════
+   RETAKE
+══════════════════════════════════════════════ */
+retakeBtn.addEventListener('click', () => {
+  captureBtn.disabled = false;
+  captureBtn.style.display = 'inline-flex';
+  retakeBtn.style.display = 'none';
+  dataCard.classList.add('hidden');
+  choiceCard.classList.add('hidden');
+  promptCard.classList.add('hidden');
+  setStep(2);
+  analysisMsg.textContent = '📍 얼굴을 화면 중앙에 맞추고 [분석 시작]을 눌러주세요.';
+  // Reset choices
+  document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+  state.choices = { subject: null, vibe: null, accessory: [], bg: null };
+});
+
+/* ══════════════════════════════════════════════
+   MANUAL FALLBACK (no camera)
+══════════════════════════════════════════════ */
+function doManualFallback() {
+  state.analysisData = {
+    gender: 'teacher',
+    faceShape: 'oval',
+    eyeSize: 'medium',
+    eyebrow: 'normal',
+    nose: 'medium',
+    mouth: 'medium',
+    skinTone: 'medium',
+    skinColor: '#C8956C',
+    hairLength: 'medium',
+    hairTiedUp: null,
+  };
+  loadingPopup.classList.add('hidden');
+  showResults();
+}
+
+/* ══════════════════════════════════════════════
+   UTIL
+══════════════════════════════════════════════ */
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Initial prompt seed
+state.currentPrompt = 'chibi style, 2D vector art, minimalist flat design, clean thick outlines, white background, cute proportions, big head small body, medium teacher';
+</script>
+</body>
+</html>
